@@ -26,6 +26,10 @@ namespace MetricAgent
             services.AddControllers();
             ConfigureSqlLiteConnection(services);
             services.AddScoped<ICpuMetricsRepository, CpuMetricsRepository>();
+            services.AddScoped<IDotNetMetricsRepository, DotNetMetricsRepository>();
+            services.AddScoped<IHddMetricsRepository, HddMetricsRepository>();
+            services.AddScoped<INetworkMetricsRepository, NetworkMetricsRepository>();
+            services.AddScoped<IRamMetricsRepository, RamMetricsRepository>();
             services.AddSingleton<ValuesHolder>();
             services.AddSwaggerGen(c =>
             {
@@ -44,10 +48,10 @@ namespace MetricAgent
         {
             using (var command = new SQLiteCommand(connection))
             {
-                // задаем новый текст команды для выполнения
-                // удаляем таблицу с метриками если она существует в базе данных
+                // Г§Г Г¤Г ГҐГ¬ Г­Г®ГўГ»Г© ГІГҐГЄГ±ГІ ГЄГ®Г¬Г Г­Г¤Г» Г¤Г«Гї ГўГ»ГЇГ®Г«Г­ГҐГ­ГЁГї
+                // ГіГ¤Г Г«ГїГҐГ¬ ГІГ ГЎГ«ГЁГ¶Гі Г± Г¬ГҐГІГ°ГЁГЄГ Г¬ГЁ ГҐГ±Г«ГЁ Г®Г­Г  Г±ГіГ№ГҐГ±ГІГўГіГҐГІ Гў ГЎГ Г§ГҐ Г¤Г Г­Г­Г»Гµ
                 command.CommandText = "DROP TABLE IF EXISTS cpumetrics";
-                // отправляем запрос в базу данных
+                // Г®ГІГЇГ°Г ГўГ«ГїГҐГ¬ Г§Г ГЇГ°Г®Г± Гў ГЎГ Г§Гі Г¤Г Г­Г­Г»Гµ
                 command.ExecuteNonQuery();
 
 
