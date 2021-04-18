@@ -6,13 +6,13 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using System.IO;
-using MetricAgent.Metric;
 using AutoMapper;
-using MetricAgent.Responses;
-using MetricAgent;
-using MetricAgent.Interface;
+using Core.Interfaces;
+using MetricAgent.DAL.Metric;
+using MetricAgent.DAL.Models;
+using MetricAgent.DAL.Responses;
 
-namespace MetricsAgent.Controllers
+namespace MetricAgent.Controllers
 {
     [Route("api/metrics/hdd")]
     [ApiController]
@@ -27,26 +27,45 @@ namespace MetricsAgent.Controllers
             _mapper = mapper;
             _repository = repository;
             _logger = logger;
-            _logger.LogDebug("NLog встроен в HddMetricsController");
+            _logger.LogDebug(1, "NLog встроен в HddMetricsController");
         }
+
         [HttpGet("left")]
-        public IActionResult GetHdd()
+        public IActionResult GetMetricsFromAgent()
         {
-            _logger.LogInformation("HddNetMetricsController вызов метода GetHdd");
-            double free = 0;
-            double Driver = 0;
-            string nameSpace = "";
-            DriveInfo[] allDrives = DriveInfo.GetDrives();
-            foreach (DriveInfo MyDriveInfo in allDrives)
+            var metric = _repository.GetLast();
+
+            if (metric == null)
             {
-                if (MyDriveInfo.IsReady == true)
-                {
-                    free = MyDriveInfo.AvailableFreeSpace;
-                    Driver = (free / 1024) / 1024;
-                    nameSpace += MyDriveInfo.Name + ": " + Driver.ToString("#.##") + Environment.NewLine;
-                }
+                return Ok();
             }
-            return Ok(nameSpace);
-        }       
+
+            return Ok(_mapper.Map<HddMetricDto>(metric));
+        }
+
+        [HttpGet("from/{fromTime}/to/{toTime}")]
+        public IActionResult GetMetricsFromAgent([FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime)
+        {
+            _logger.LogInformation($"Входные данные {fromTime} {toTime}");
+
+            var metrics = _repository.GetFromTo(fromTime, toTime);
+
+            if (metrics == null)
+            {
+                return Ok();
+            }
+
+            var response = new AllHddMetricsResponse()
+            {
+                Metrics = new List<HddMetricDto>()
+            };
+
+            foreach (var metric in metrics)
+            {
+                response.Metrics.Add(_mapper.Map<HddMetricDto>(metric));
+            }
+
+            return Ok(response);
+        }
     }
 }

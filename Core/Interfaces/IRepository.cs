@@ -7,16 +7,11 @@ namespace Core.Interfaces
 {
     public interface IRepository<T> where T : class
     {
-        IList<T> GetAll();
-
-        IList<T> GetInTimePeriod(DateTimeOffset timeFrom, DateTimeOffset timeTo);
-
-        T GetById(int id);
+        IList<T> GetFromTo(DateTimeOffset fromTime, DateTimeOffset toTime);
 
         void Create(T item);
 
-        void Update(T item);
-
-        void Delete(int id);
+        T GetLast();
     }
 }
+

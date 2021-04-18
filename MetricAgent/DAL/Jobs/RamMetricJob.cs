@@ -1,12 +1,13 @@
-﻿using Quartz;
+﻿using MetricsAgent.DAL;
+using Quartz;
 using System;
 using Microsoft.Extensions.DependencyInjection;
 using System.Diagnostics;
 using System.Threading.Tasks;
-using MetricAgent.Metric;
-using MetricAgent.Interface;
+using Core.Interfaces;
+using MetricAgent.DAL.Metric;
 
-namespace MetricAgent.Jobs
+namespace MetricsAgent.DAL.Jobs
 {
     public class RamMetricJob : IJob
     {

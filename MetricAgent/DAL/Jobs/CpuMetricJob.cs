@@ -1,12 +1,12 @@
-﻿using MetricAgent.DAL;
-using MetricAgent.Interface;
+﻿using Core.Interfaces;
+using MetricAgent.DAL.Metric;
 using Microsoft.Extensions.DependencyInjection;
 using Quartz;
 using System;
 using System.Diagnostics;
 using System.Threading.Tasks;
 
-namespace MetricAgent.Jobs
+namespace MetricsAgent.DAL.Jobs
 {
     public class CpuMetricJob : IJob
     {
@@ -30,7 +30,7 @@ namespace MetricAgent.Jobs
 
             // теперь можно записать что-то при помощи репозитория
 
-            _repository.Create(new CpuMetric { Time = time, Value = cpuUsageInPercents });
+            _repository.Create(new CpuMetric {Id = 1, Time = time, Value = cpuUsageInPercents });
 
             return Task.CompletedTask;
         }

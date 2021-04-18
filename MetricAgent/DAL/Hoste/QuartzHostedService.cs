@@ -6,6 +6,7 @@ using MetricAgent;
 using Microsoft.Extensions.Hosting;
 using Quartz;
 using Quartz.Spi;
+using Core;
 
 public class QuartzHostedService : IHostedService
 {

@@ -15,5 +15,7 @@ namespace Core.Interfaces
         T GetLast();
 
         IList<T> GetFromToByAgent(int agentId, DateTimeOffset fromTime, DateTimeOffset toTime);
+
+        T GetLastFromAgent(int agentId);
     }
 }

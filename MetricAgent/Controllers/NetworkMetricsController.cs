@@ -5,13 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using MetricAgent.Metric;
-using MetricAgent.Responses;
 using AutoMapper;
-using MetricAgent;
-using MetricAgent.Interface;
+using Core.Interfaces;
+using MetricAgent.DAL.Metric;
+using MetricAgent.DAL.Responses;
+using MetricAgent.DAL.Models;
 
-namespace MetricsAgent.Controllers
+namespace MetricAgent.Controllers
 {
     [Route("api/metrics/network")]
     [ApiController]
@@ -26,7 +26,7 @@ namespace MetricsAgent.Controllers
             _mapper = mapper;
             _repository = repository;
             _logger = logger;
-            _logger.LogDebug( "NLog встроен в NetworkMetricsController");
+            _logger.LogDebug(1, "NLog встроен в NetworkMetricsController");
         }
 
         [HttpGet("from/{fromTime}/to/{toTime}")]
@@ -34,7 +34,7 @@ namespace MetricsAgent.Controllers
         {
             _logger.LogInformation($"Входные данные {fromTime} {toTime}");
 
-            var metrics = _repository.GetInTimePeriod(fromTime, toTime);
+            var metrics = _repository.GetFromTo(fromTime, toTime);
 
             if (metrics == null)
             {

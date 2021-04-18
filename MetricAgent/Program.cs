@@ -1,10 +1,14 @@
-using System;
-using NLog.Web;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
+using NLog.Web;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 
-namespace MetricAgent
+namespace MSmanager
 {
     public class Program
     {
@@ -36,6 +40,7 @@ namespace MetricAgent
             Host.CreateDefaultBuilder(args).ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.UseStartup<Startup>();
+                webBuilder.UseUrls("http://localhost:5088");
             })
             .ConfigureLogging(logging =>
             {
@@ -44,4 +49,3 @@ namespace MetricAgent
             }).UseNLog(); // добавляем библиотеку nlog
     }
 }
-

@@ -1,13 +1,14 @@
 ﻿using Dapper;
-using MetricAgent.DAL;
-using MetricAgent.Interface;
+using MetricAgent.DAL.Metric;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.Interfaces;
+using MetricAgent.DAL.Handlers;
 
-namespace MetricAgent
+namespace MetricAgent.DAL.Repository
 {
     public class CpuMetricsRepository : IRepository<CpuMetric> 
     {
@@ -31,40 +32,11 @@ namespace MetricAgent
             }
         }
 
-        public void Delete(int id)
+        public IList<CpuMetric> GetFromTo(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                connection.Execute("DELETE FROM cpumetrics WHERE id=@id",
-                    new
-                    {
-                        id = id
-                    });
-            }
-        }
-
-        public IList<CpuMetric> GetAll()
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.Query<CpuMetric>("SELECT Id, Time, Value FROM cpumetrics").ToList();
-            }
-        }
-
-        public CpuMetric GetById(int id)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.QuerySingle<CpuMetric>("SELECT Id, Time, Value FROM cpumetrics WHERE id=@id",
-                    new { id = id });
-            }
-        }
-
-        public IList<CpuMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.Query<CpuMetric>("SELECT * FROM cpumetric WHERE time >= @fromtime AND time <= @totime",
+                return connection.Query<CpuMetric>("SELECT * FROM cpumetrics WHERE time >= @fromtime AND time <= @totime",
                     new
                     {
                         fromtime = fromTime.ToUnixTimeSeconds(),
@@ -78,20 +50,6 @@ namespace MetricAgent
             using (var connection = new SQLiteConnection(ConnectionString))
             {
                 return connection.QuerySingle<CpuMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
-            }
-        }
-
-        public void Update(CpuMetric item)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                connection.Execute("UPDATE cpumetrics SET value = @value, time = @time WHERE id=@id",
-                    new
-                    {
-                        value = item.Value,
-                        time = item.Time.TotalSeconds,
-                        id = item.Id
-                    });
             }
         }
     }

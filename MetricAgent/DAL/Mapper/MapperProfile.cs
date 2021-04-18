@@ -1,22 +1,24 @@
 ﻿using AutoMapper;
-using MetricAgent.Metric;
-using MetricAgent.Responses;
+using MetricAgent.DAL.Metric;
+using MetricAgent.DAL.Models;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace MetricAgent.DAL.Mapper
 {
-	public class MapperProfile : Profile
-	{
-		public MapperProfile()
-		{
-			CreateMap<CpuMetric, CpuMetricDto>();
-			CreateMap<DotNetMetric, DotNetMetricDto>();
-			CreateMap<HddMetric, HddMetricDto>();
-			CreateMap<NetworkMetric, NetworkMetricDto>();
-			CreateMap<RamMetric, RamMetricDto>();
-		}
-	}
+    public class MapperProfile : Profile
+    {
+        public MapperProfile()
+        {
+            CreateMap<CpuMetric, CpuMetricDto>()
+                .ForMember(dto => dto.Time, opt => opt.MapFrom(c => DateTimeOffset.FromUnixTimeSeconds((long)c.Time.TotalSeconds)));
+            CreateMap<DotNetMetric, DotNetMetricDto>()
+                .ForMember(dto => dto.Time, opt => opt.MapFrom(c => DateTimeOffset.FromUnixTimeSeconds((long)c.Time.TotalSeconds)));
+            CreateMap<NetworkMetric, NetworkMetricDto>()
+                .ForMember(dto => dto.Time, opt => opt.MapFrom(c => DateTimeOffset.FromUnixTimeSeconds((long)c.Time.TotalSeconds)));
+            CreateMap<HddMetric, HddMetricDto>()
+                .ForMember(dto => dto.Time, opt => opt.MapFrom(c => DateTimeOffset.FromUnixTimeSeconds((long)c.Time.TotalSeconds)));
+            CreateMap<RamMetric, RamMetricDto>()
+                .ForMember(dto => dto.Time, opt => opt.MapFrom(c => DateTimeOffset.FromUnixTimeSeconds((long)c.Time.TotalSeconds)));
+        }
+    }
 }

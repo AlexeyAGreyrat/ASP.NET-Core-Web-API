@@ -4,9 +4,11 @@ using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-using MetricAgent.Interface;
+using Core.Interfaces;
+using MetricAgent.DAL.Handlers;
+using MetricAgent.DAL.Metric;
 
-namespace MetricAgent.DAL
+namespace MetricAgent.DAL.Repository
 {
     public class DotNetMetricsRepository : IRepository<DotNetMetric>
     {
@@ -30,33 +32,7 @@ namespace MetricAgent.DAL
             }
         }
 
-        public void Delete(int id)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                connection.Execute("DELETE FROM dotnetmetrics WHERE id = @id",
-                    new { id = id });
-            }
-        }
-
-        public IList<DotNetMetric> GetAll()
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.Query<DotNetMetric>("SELECT * FROM dotnetmetrics").ToList();
-            }
-        }
-
-        public DotNetMetric GetById(int id)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.QuerySingle<DotNetMetric>("SELECT * FROM dotnetmetrics WHERE id = @id",
-                    new { id = id });
-            }
-        }
-
-        public IList<DotNetMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
+        public IList<DotNetMetric> GetFromTo(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
@@ -74,20 +50,6 @@ namespace MetricAgent.DAL
             using (var connection = new SQLiteConnection(ConnectionString))
             {
                 return connection.QuerySingle<DotNetMetric>("SELECT * FROM dotnetmetrics ORDER BY id DESC LIMIT 1");
-            }
-        }
-
-        public void Update(DotNetMetric item)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                connection.Execute("UPDATE dotnetmetrics SET value = @value, time = @time WHERE id = @id",
-                    new
-                    {
-                        value = item.Value,
-                        time = item.Time.TotalSeconds,
-                        id = item.Id
-                    });
             }
         }
     }

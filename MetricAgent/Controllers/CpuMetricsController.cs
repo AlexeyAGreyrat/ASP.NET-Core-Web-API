@@ -1,81 +1,79 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Core.Enum;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
-using MetricManager.Enums;
-using System.Data.SQLite;
-using MetricAgent.Responses;
-using MetricAgent.Requests;
-using Microsoft.Extensions.Logging;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
+using System.Data.SQLite;
 using AutoMapper;
-using MetricAgent.Interface;
+using Core.Interfaces;
+using MetricAgent.DAL.Metric;
+using MetricAgent.DAL.Models;
+using MetricAgent.DAL.Responses;
 
 namespace MetricAgent.Controllers
 {
-    [Route("api/metrics/Cpu")]
+    [Route("api/metrics/cpu")]
     [ApiController]
     public class CpuMetricsController : ControllerBase
     {
-        private readonly IMapper _mapper;
-        private IRepository<CpuMetric> _repository;
         private readonly ILogger<CpuMetricsController> _logger;
+        private IRepository<CpuMetric> _repository;
+        private IMapper _mapper;
 
         public CpuMetricsController(ILogger<CpuMetricsController> logger, IRepository<CpuMetric> repository, IMapper mapper)
         {
-            _repository = repository;
             _mapper = mapper;
+            _repository = repository;
             _logger = logger;
-            _logger.LogInformation("NLog встроен в CpuMetricsController");
+            _logger.LogDebug(1, "NLog встроен в CpuMetricsController");
         }
 
-        [HttpGet("from/{fromTime}/to/{toTime}")]
-        public IActionResult GetMetrics([FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime)
+        [HttpGet("read")]
+        public void Test()
         {
-            _logger.LogInformation("CpuMetricsController вызов метода GetMetrics");
 
-            var metrics = _repository.GetInTimePeriod(fromTime, toTime);
-
-            var response = new AllCpuMetricsResponse()
-            {
-                Metrics = new List<CpuMetricDto>()
-            };
-
-            foreach (var metric in metrics)
-            {
-                response.Metrics.Add(new CpuMetricDto { Time = metric.Time, Value = metric.Value, Id = metric.Id });
-            }
-            foreach (var metric in metrics)
-            {
-                response.Metrics.Add(_mapper.Map<CpuMetricDto>(metric));
-            }
-
-            return Ok(response);
         }
 
         [HttpGet("from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
-        public IActionResult GetMetricsByPercentile([FromRoute] TimeSpan fromTime, [FromRoute] TimeSpan toTime, [FromRoute] Percentile percentile)
+        public IActionResult GetMetricsByPercentileFromAgent([FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime,
+            [FromRoute] Percentile percentile)
         {
-            _logger.LogInformation("CpuMetricsController вызов метода GetMetricsByPercentile");
-            return Ok();
-        }
-        [HttpPost("create")]
-        public IActionResult Create([FromBody] CpuMetricCreateRequest request)
-        {
-            _logger.LogInformation("CpuMetricsController вызов метода Create");
+            _logger.LogInformation($"Входные данные {fromTime} {toTime} {percentile}");
 
-            _repository.Create(new CpuMetric
+            var metrics = _repository.GetFromTo(fromTime, toTime);
+
+            if (metrics == null)
             {
-                Time = new TimeSpan(request.Time),
-                Value = request.Value
-            });
+                return Ok();
+            }
 
-            return Ok();
+            var response = new AllCpuMetricsResponse()
+            {
+                Metrics = new List<CpuMetricDto>()
+            };           
+
+            foreach (var metric in metrics)
+            {
+                response.Metrics.Add(_mapper.Map<CpuMetricDto>(metric));
+            }
+
+            return Ok($"По перцентилю {percentile} нагрузка не превышает {metrics.Max(metric => metric.Value)}%");
         }
 
-        [HttpGet("all")]
-        public IActionResult GetAll()
+        [HttpGet("from/{fromTime}/to/{toTime}")]
+        public IActionResult GetMetricsFromAgent([FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime)
         {
-            IList<CpuMetric> metrics = _repository.GetAll();
+            _logger.LogInformation($"Входные данные {fromTime} {toTime}");
+
+            var metrics = _repository.GetFromTo(fromTime, toTime);
+
+            if (metrics == null)
+            {
+                return Ok();
+            }
 
             var response = new AllCpuMetricsResponse()
             {
@@ -88,7 +86,7 @@ namespace MetricAgent.Controllers
             }
 
             return Ok(response);
-        }
-
+        }        
     }
-}
+} 
+

@@ -1,13 +1,14 @@
-﻿using MetricAgent.Metric;
+﻿using MetricAgent.DAL.Metric;
 using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
-using MetricAgent.Interface;
+using Core.Interfaces;
+using MetricAgent.DAL.Handlers;
 
-namespace MetricAgent.DAL
+namespace MetricAgent.DAL.Repository
 {
     public class NetworkMetricsRepository : IRepository<NetworkMetric>
     {
@@ -32,33 +33,7 @@ namespace MetricAgent.DAL
             }
         }
 
-        public void Delete(int id)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                connection.Execute("DELETE FROM networkmetrics WHERE id = @id",
-                    new { id = id });
-            }
-        }
-
-        public IList<NetworkMetric> GetAll()
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.Query<NetworkMetric>("SELECT * FROM networkmetrics").ToList();
-            }
-        }
-
-        public NetworkMetric GetById(int id)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.QuerySingle<NetworkMetric>("SELECT * FROM networkmetrics WHERE id = @id",
-                    new { id = id });
-            }
-        }
-
-        public IList<NetworkMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
+        public IList<NetworkMetric> GetFromTo(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
@@ -76,20 +51,6 @@ namespace MetricAgent.DAL
             using (var connection = new SQLiteConnection(ConnectionString))
             {
                 return connection.QuerySingle<NetworkMetric>("SELECT * FROM networkmetrics ORDER BY id DESC LIMIT 1");
-            }
-        }
-
-        public void Update(NetworkMetric item)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                connection.Execute("UPDATE networkmetrics SET value = @value, time = @time WHERE id = @id",
-                    new
-                    {
-                        value = item.Value,
-                        time = item.Time.TotalSeconds,
-                        id = item.Id
-                    });
             }
         }
     }
