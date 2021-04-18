@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
 using Core.Interfaces;
+using Dapper;
+using System.Data.SQLite;
 using MetricManager.DAL.Metrics;
 
 namespace MetricManager.DAL.Repository
@@ -22,7 +22,7 @@ namespace MetricManager.DAL.Repository
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                connection.Execute("INSERT INTO rammetrics (value, time) VALUES (@value, @time)",
+                connection.Execute("INSERT INTO rammetrics(value, time, agentid) VALUES(@value, @time, @agentid)",
                     new
                     {
                         value = item.Value,
@@ -30,13 +30,13 @@ namespace MetricManager.DAL.Repository
                         agentid = item.AgentId
                     });
             }
-        }      
+        }
 
         public IList<RamMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                return connection.Query<RamMetric>("SELECT * FROM rammetrics WHERE time >= @fromtime AND time <= @totime",
+                return connection.Query<RamMetric>("SELECT * FROM cpumetric WHERE time >= @fromtime AND time <= @totime",
                     new
                     {
                         fromtime = fromTime.ToUnixTimeSeconds(),
@@ -44,7 +44,6 @@ namespace MetricManager.DAL.Repository
                     }).ToList();
             }
         }
-
 
         public IList<RamMetric> GetFromToByAgent(int agentId, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
@@ -66,10 +65,28 @@ namespace MetricManager.DAL.Repository
             {
                 try
                 {
-                    return connection.QuerySingle<RamMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
-
+                    return connection.QuerySingle<RamMetric>("SELECT * FROM rammetrics ORDER BY id DESC LIMIT 1");
                 }
-                catch (Exception)
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public RamMetric GetLastFromAgent(int agentId)
+        {
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                try
+                {
+                    return connection.QuerySingle<RamMetric>("SELECT * FROM rammetrics ORDER BY id DESC LIMIT 1 WHERE agentid = @agentid",
+                        new
+                        {
+                            agentid = agentId
+                        });
+                }
+                catch
                 {
                     return null;
                 }

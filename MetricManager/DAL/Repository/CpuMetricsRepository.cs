@@ -1,15 +1,16 @@
-﻿using Dapper;
-using Core.Interfaces;
-using MetricManager.DAL.Metrics;
-using System;
+﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
+using Core.Interfaces;
+using Core;
+using Dapper;
+using System.Data.SQLite;
+using MetricManager.DAL.Metrics;
 
 namespace MetricManager.DAL.Repository
 {
-    public class CpuMetricsRepository : IRepositoryGet<CpuMetric> 
+    public class CpuMetricsRepository : IRepositoryGet<CpuMetric>
     {
         private const string ConnectionString = @"Data Source=metrics.db; Version=3;Pooling=True;Max Pool Size=100;";
 
@@ -17,12 +18,11 @@ namespace MetricManager.DAL.Repository
         {
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
         }
-
         public void Create(CpuMetric item)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                connection.Execute("INSERT INTO cpumetrics(value, time) VALUES(@value, @time)",
+                connection.Execute("INSERT INTO cpumetrics(value, time, agentid) VALUES(@value, @time, @agentid)",
                     new
                     {
                         value = item.Value,
@@ -30,12 +30,13 @@ namespace MetricManager.DAL.Repository
                         agentid = item.AgentId
                     });
             }
-        }      
+        }
+
         public IList<CpuMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                return connection.Query<CpuMetric>("SELECT * FROM cpumetric WHERE time >= @fromtime AND time <= @totime",
+                return connection.Query<CpuMetric>("SELECT * FROM cpumetrics WHERE time >= @fromtime AND time <= @totime",
                     new
                     {
                         fromtime = fromTime.ToUnixTimeSeconds(),
@@ -43,6 +44,7 @@ namespace MetricManager.DAL.Repository
                     }).ToList();
             }
         }
+
         public IList<CpuMetric> GetFromToByAgent(int agentId, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
@@ -56,6 +58,7 @@ namespace MetricManager.DAL.Repository
                     }).ToList();
             }
         }
+
         public CpuMetric GetLast()
         {
             using (var connection = new SQLiteConnection(ConnectionString))
@@ -63,13 +66,32 @@ namespace MetricManager.DAL.Repository
                 try
                 {
                     return connection.QuerySingle<CpuMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
-
                 }
-                catch (Exception)
+                catch 
                 {
                     return null;
                 }
             }
-        }        
+        }
+
+        public CpuMetric GetLastFromAgent(int agentId)
+        {
+
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                try
+                {
+                    return connection.QuerySingle<CpuMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1 WHERE agentid = @agentid",
+                        new
+                        {
+                            agentid = agentId
+                        });
+                }
+                catch 
+                {
+                    return null;
+                }
+            }
+        }
     }
 }

@@ -1,9 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
-using Dapper;
 using System.Linq;
+using System.Threading.Tasks;
 using Core.Interfaces;
+using Dapper;
+using System.Data.SQLite;
 using MetricManager.DAL.Metrics;
 
 namespace MetricManager.DAL.Repository
@@ -21,7 +22,7 @@ namespace MetricManager.DAL.Repository
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                connection.Execute("INSERT INTO hddmetrics (value, time) VALUES (@value, @time)",
+                connection.Execute("INSERT INTO hddmetrics(value, time, agentid) VALUES(@value, @time, @agentid)",
                     new
                     {
                         value = item.Value,
@@ -29,7 +30,8 @@ namespace MetricManager.DAL.Repository
                         agentid = item.AgentId
                     });
             }
-        }      
+        }
+
         public IList<HddMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
@@ -56,16 +58,35 @@ namespace MetricManager.DAL.Repository
                     }).ToList();
             }
         }
+
         public HddMetric GetLast()
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
                 try
                 {
-                    return connection.QuerySingle<HddMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
-
+                    return connection.QuerySingle<HddMetric>("SELECT * FROM hddmetrics ORDER BY id DESC LIMIT 1");
                 }
-                catch (Exception)
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public HddMetric GetLastFromAgent(int agentId)
+        {
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                try
+                {
+                    return connection.QuerySingle<HddMetric>("SELECT * FROM hddmetrics ORDER BY id DESC LIMIT 1 WHERE agentid = @agentid",
+                        new
+                        {
+                            agentid = agentId
+                        });
+                }
+                catch
                 {
                     return null;
                 }

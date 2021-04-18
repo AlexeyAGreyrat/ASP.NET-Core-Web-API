@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
 using Core.Interfaces;
+using Dapper;
+using System.Data.SQLite;
 using MetricManager.DAL.Metrics;
 
 namespace MetricManager.DAL.Repository
@@ -17,12 +17,11 @@ namespace MetricManager.DAL.Repository
         {
             SqlMapper.AddTypeHandler(new TimeSpanHandler());
         }
-
         public void Create(DotNetMetric item)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                connection.Execute("INSERT INTO dotnetmetrics (value, time) VALUES (@value, @time)",
+                connection.Execute("INSERT INTO dotnetmetrics(value, time, agentid) VALUES(@value, @time, @agentid)",
                     new
                     {
                         value = item.Value,
@@ -30,15 +29,21 @@ namespace MetricManager.DAL.Repository
                         agentid = item.AgentId
                     });
             }
-        }        
+        }
 
-        public IList<DotNetMetric> GetAll()
+        public IList<DotNetMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                return connection.Query<DotNetMetric>("SELECT * FROM dotnetmetrics").ToList();
+                return connection.Query<DotNetMetric>("SELECT * FROM dotnetmetrics WHERE time >= @fromtime AND time <= @totime",
+                    new
+                    {
+                        fromtime = fromTime.ToUnixTimeSeconds(),
+                        totime = toTime.ToUnixTimeSeconds()
+                    }).ToList();
             }
         }
+
         public IList<DotNetMetric> GetFromToByAgent(int agentId, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
@@ -53,34 +58,38 @@ namespace MetricManager.DAL.Repository
             }
         }
 
-            public IList<DotNetMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
-        {
-            using (var connection = new SQLiteConnection(ConnectionString))
-            {
-                return connection.Query<DotNetMetric>("SELECT * FROM dotnetmetrics WHERE time >= @fromtime AND time <= @totime",
-                    new
-                    {
-                        fromtime = fromTime.ToUnixTimeSeconds(),
-                        totime = toTime.ToUnixTimeSeconds()
-                    }).ToList();
-            }
-        }
-
         public DotNetMetric GetLast()
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
                 try
                 {
-                    return connection.QuerySingle<DotNetMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
-
+                    return connection.QuerySingle<DotNetMetric>("SELECT * FROM dotnetmetrics ORDER BY id DESC LIMIT 1");
                 }
-                catch (Exception)
+                catch
                 {
                     return null;
                 }
             }
-        }        
-        
+        }
+
+        public DotNetMetric GetLastFromAgent(int agentId)
+        {
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                try
+                {
+                    return connection.QuerySingle<DotNetMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1 WHERE agentid = @agentid",
+                        new
+                        {
+                            agentid = agentId
+                        });
+                }
+                catch
+                {
+                    return null;
+                }
+            }
+        }
     }
 }

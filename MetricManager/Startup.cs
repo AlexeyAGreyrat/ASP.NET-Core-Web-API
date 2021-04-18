@@ -19,10 +19,10 @@ using System.Data.SQLite;
 using MetricManager.DAL.Metrics;
 using MetricManager.DAL.Repository;
 using MetricManager.DAL.DTO;
-using MetricsManager.DAL.Repository;
 using MetricManager.DAL.Jobs;
 using System.Reflection;
 using System.IO;
+using MetricManager.DAL.Mapper;
 
 namespace MetricManager
 {
@@ -94,18 +94,28 @@ namespace MetricManager
                 cronExpression: "0/10 * * * * ?"));
 
             services.AddHostedService<QuartzHostedService>();
+
             services.AddHttpClient<IMetricsAgentClient, MetricsAgentClient>()
-    .AddTransientHttpErrorPolicy(p =>
-         p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(1000)));
+              .AddTransientHttpErrorPolicy(p =>
+                  p.WaitAndRetryAsync(3, _ => TimeSpan.FromMilliseconds(1000)));
+
             services.AddSwaggerGen(c =>
             {
-                c.SwaggerDoc("v1", new OpenApiInfo { 
-                    Title = "API сервис менеджера метрик", Version = "v1" 
-                });
-            var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
-            var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-            c.IncludeXmlComments(xmlPath);
-        });
+                c.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Version = "v1",
+                    Title = "API сервиса агента сбора метрик",
+                    Contact = new OpenApiContact
+                    {
+                        Name = "Alexy",
+                        Email = "null"
+                    }
+                }); 
+                // Указываем файл из которого брать комментарии для Swagger UI
+                var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+                var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+                c.IncludeXmlComments(xmlPath);
+            });
 
         }
     private void ConfigureSqlLiteConnection(IServiceCollection services)
@@ -122,7 +132,11 @@ namespace MetricManager
             {
                 app.UseDeveloperExceptionPage();
                 app.UseSwagger();
-                app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "API сервис менеджера метрик v1"));
+                app.UseSwaggerUI(c =>
+                {
+                    c.SwaggerEndpoint("/swagger/v1/swagger.json", "API сервис менеджера метрик v1");
+                    c.RoutePrefix = string.Empty; 
+                });
             }
 
             app.UseHttpsRedirection();

@@ -7,7 +7,6 @@ namespace MetricManager.DAL.Models
 {
     public class HddMetricDto
     {
-        public int AgentId { get; set; }
         public DateTimeOffset Time { get; set; }
         public int Value { get; set; }
         public int Id { get; set; }

@@ -7,7 +7,7 @@ namespace MetricManager.DAL.Models
 {
     public class AgentDto
     {
-        public int agentId { get; set; }
-        public Uri AgentAddress { get; set; }
+        public int AgentId { get; set; }
+        public string AgentURL { get; set; }
     }
 }

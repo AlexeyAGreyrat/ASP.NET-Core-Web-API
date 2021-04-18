@@ -1,17 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data.SQLite;
 using System.Linq;
 using System.Threading.Tasks;
-using Dapper;
 using Core.Interfaces;
+using Dapper;
+using System.Data.SQLite;
 using MetricManager.DAL.Metrics;
 
 namespace MetricManager.DAL.Repository
 {
     public class NetworkMetricsRepository : IRepositoryGet<NetworkMetric>
     {
-
         private const string ConnectionString = @"Data Source=metrics.db; Version=3;Pooling=True;Max Pool Size=100;";
 
         public NetworkMetricsRepository()
@@ -23,15 +22,16 @@ namespace MetricManager.DAL.Repository
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                connection.Execute("INSERT INTO networkmetrics (value, time) VALUES (@value, @time)",
+                connection.Execute("INSERT INTO networkmetrics(value, time, agentid) VALUES(@value, @time, @agentid)",
                     new
                     {
                         value = item.Value,
                         time = item.Time.TotalSeconds,
                         agentid = item.AgentId
-                    }) ;
+                    });
             }
-        }            
+        }
+
         public IList<NetworkMetric> GetInTimePeriod(DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
@@ -43,13 +43,13 @@ namespace MetricManager.DAL.Repository
                         totime = toTime.ToUnixTimeSeconds()
                     }).ToList();
             }
-        }        
+        }
 
         public IList<NetworkMetric> GetFromToByAgent(int agentId, DateTimeOffset fromTime, DateTimeOffset toTime)
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                return connection.Query<NetworkMetric>("SELECT * FROM hddmetrics WHERE time >= @fromtime AND time <= @totime AND agentid = @agentId",
+                return connection.Query<NetworkMetric>("SELECT * FROM networkmetrics WHERE time >= @fromtime AND time <= @totime AND agentid = @agentId",
                     new
                     {
                         agentid = agentId,
@@ -58,16 +58,35 @@ namespace MetricManager.DAL.Repository
                     }).ToList();
             }
         }
+
         public NetworkMetric GetLast()
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
                 try
                 {
-                    return connection.QuerySingle<NetworkMetric>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
-
+                    return connection.QuerySingle<NetworkMetric>("SELECT * FROM networkmetrics ORDER BY id DESC LIMIT 1");
                 }
-                catch (Exception)
+                catch
+                {
+                    return null;
+                }
+            }
+        }
+
+        public NetworkMetric GetLastFromAgent(int agentId)
+        {
+            using (var connection = new SQLiteConnection(ConnectionString))
+            {
+                try
+                {
+                    return connection.QuerySingle<NetworkMetric>("SELECT * FROM networkmetrics ORDER BY id DESC LIMIT 1 WHERE agentid = @agentid",
+                        new
+                        {
+                            agentid = agentId
+                        });
+                }
+                catch
                 {
                     return null;
                 }

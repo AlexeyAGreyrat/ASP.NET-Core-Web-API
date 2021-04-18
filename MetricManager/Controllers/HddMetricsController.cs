@@ -1,18 +1,16 @@
-﻿using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Core.Enum;
-using MetricManager.DAL.Responses;
-using MetricManager.DAL.Metrics;
-using MetricManager.DAL.Models;
-using MetricManager.DAL.Client;
+using System.Collections.Generic;
 using AutoMapper;
+using System.Linq;
 using Core.Interfaces;
+using Core.Enum;
+using MetricManager.DAL.Client;
 using MetricManager.DAL.DTO;
+using MetricManager.DAL.Metrics;
+using MetricManager.DAL.Responses;
+using MetricManager.DAL.Models;
 
 namespace MetricManager.Controllers
 {
@@ -36,13 +34,15 @@ namespace MetricManager.Controllers
             _logger = logger;
             _logger.LogDebug(1, "NLog встроен в HddMetricsController");
         }
+
         /// <summary>
-        /// Получает метрики Hdd на заданном диапазоне времени
+        /// Получает метрики Hdd на заданном диапазоне времени от определённого агента
         /// </summary>
-        /// <param name="fromTime">начальная метрка времени в секундах с 01.01.2000</param>
-        /// <param name="toTime">конечная метрка времени в секундах с 01.01.2021</param>
+        /// <param name="agentId">айди агента</param>
+        /// <param name="fromTime">начальная дата</param>
+        /// <param name="toTime">конечная дата</param>
         /// <returns>Список метрик, которые были сохранены в заданном диапазоне времени</returns>
-        /// <response code="201">Если все хорошо</response>
+        /// <response code="200">Если все хорошо</response>
         /// <response code="400">если передали не правильные параетры</response> 
         [HttpGet("agent/{agentId}/from/{fromTime}/to/{toTime}")]
         public IActionResult GetMetricsFromAgent([FromRoute] int agentId, [FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime)
@@ -68,13 +68,16 @@ namespace MetricManager.Controllers
 
             return Ok(response);
         }
+
         /// <summary>
-        /// Получает метрики Hdd на заданном диапазоне времени с працентли
+        /// Получает метрики Hdd на заданном диапазоне времени от определённого агента в персентилях
         /// </summary>
-        /// <param name="fromTime">начальная метрка времени в секундах с 01.01.2000</param>
-        /// <param name="toTime">конечная метрка времени в секундах с 01.01.2021</param>
+        /// <param name="agentId">айди агента</param>
+        /// <param name="fromTime">начальная дата</param>
+        /// <param name="toTime">конечная дата</param>
+        /// <param name="percentile">персенитль по которому идёт сравнение</param>
         /// <returns>Список метрик, которые были сохранены в заданном диапазоне времени</returns>
-        /// <response code="201">Если все хорошо</response>
+        /// <response code="200">Если все хорошо</response>
         /// <response code="400">если передали не правильные параетры</response> 
         [HttpGet("agent/{agentId}/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
         public IActionResult GetMetricsByPercentileFromAgent([FromRoute] int agentId, [FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime,
@@ -92,7 +95,7 @@ namespace MetricManager.Controllers
             var response = new AllHddMetricsApiResponse()
             {
                 Metrics = new List<HddMetricDto>()
-            };           
+            };
 
             foreach (var metric in metrics)
             {
@@ -101,13 +104,14 @@ namespace MetricManager.Controllers
 
             return Ok($"По перцентилю {percentile} нагрузка не превышает {metrics.Max(metric => metric.Value)}%");
         }
+
         /// <summary>
-        /// Получает метрики Hdd на заданном диапазоне времени
+        /// Получает метрики Hdd на заданном диапазоне времени от всех существующих агентов
         /// </summary>
-        /// <param name="fromTime">начальная метрка времени в секундах с 01.01.2000</param>
-        /// <param name="toTime">конечная метрка времени в секундах с 01.01.2021</param>
+        /// <param name="fromTime">начальная дата</param>
+        /// <param name="toTime">конечная дата</param>
         /// <returns>Список метрик, которые были сохранены в заданном диапазоне времени</returns>
-        /// <response code="201">Если все хорошо</response>
+        /// <response code="200">Если все хорошо</response>
         /// <response code="400">если передали не правильные параетры</response> 
         [HttpGet("cluster/from/{fromTime}/to/{toTime}")]
         public IActionResult GetMetricsFromAllCluster([FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime)
@@ -145,13 +149,15 @@ namespace MetricManager.Controllers
 
             return Ok(response);
         }
+
         /// <summary>
-        /// Получает метрики Hdd на заданном диапазоне времени с працентли
+        /// Получает метрики Hdd на заданном диапазоне времени от всех существующих агентов с персентилем
         /// </summary>
-        /// <param name="fromTime">начальная метрка времени в секундах с 01.01.2000</param>
-        /// <param name="toTime">конечная метрка времени в секундах с 01.01.2021</param>
+        /// <param name="fromTime">начальная дата</param>
+        /// <param name="toTime">конечная дата</param>
+        /// <param name="percentile">персенитль по которому идёт сравнение</param>
         /// <returns>Список метрик, которые были сохранены в заданном диапазоне времени</returns>
-        /// <response code="201">Если все хорошо</response>
+        /// <response code="200">Если все хорошо</response>
         /// <response code="400">если передали не правильные параетры</response> 
         [HttpGet("cluster/from/{fromTime}/to/{toTime}/percentiles/{percentile}")]
         public IActionResult GetMetricsByPercentileFromAllCluster([FromRoute] DateTimeOffset fromTime, [FromRoute] DateTimeOffset toTime,
@@ -183,12 +189,14 @@ namespace MetricManager.Controllers
                 Metrics = new List<HddMetricDto>()
             };
 
+           
+
             foreach (var metric in hddMetrics)
             {
                 response.Metrics.Add(_mapper.Map<HddMetricDto>(metric));
             }
 
             return Ok($"По перцентилю {percentile} нагрузка не превышает {hddMetrics.Max(metric => metric.Value)}%");
-        }
+        }        
     }
 }

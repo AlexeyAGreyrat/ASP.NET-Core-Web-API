@@ -5,9 +5,10 @@ using System.Linq;
 using System.Threading.Tasks;
 using Dapper;
 using Core.Interfaces;
+using Microsoft.AspNetCore.Mvc;
 using MetricManager.DAL.DTO;
 
-namespace MetricsManager.DAL.Repository
+namespace MetricManager.DAL.Repository
 {
     public class AgentsRepository : IAgentsRepository<AgentInfo>
     {
@@ -20,7 +21,7 @@ namespace MetricsManager.DAL.Repository
                 connection.Execute("INSERT INTO agents(agenturl) VALUES(@agenturl)",
                     new
                     {
-                        agenturl = item.AgentAddress
+                        agenturl = item.AgentURL
                     });
             }
         }
@@ -31,21 +32,25 @@ namespace MetricsManager.DAL.Repository
             {
                 return connection.Query<AgentInfo>("SELECT * FROM agents").ToList();
             }
-
         }
 
         public AgentInfo GetLast()
         {
             using (var connection = new SQLiteConnection(ConnectionString))
             {
-                try
-                {
-                    return connection.QuerySingle<AgentInfo>("SELECT * FROM cpumetrics ORDER BY id DESC LIMIT 1");
+                var result = connection.QuerySingle<AgentInfo>("SELECT * FROM agents ORDER BY id DESC LIMIT 1");
 
-                }
-                catch (Exception)
+                if (result != null)
                 {
-                    return null;
+                    return result;
+                }
+                else
+                {
+                    return new AgentInfo
+                    {
+                        AgentId = 0,
+                        AgentURL = @"http://localhost:5000"
+                    };
                 }
             }
         }

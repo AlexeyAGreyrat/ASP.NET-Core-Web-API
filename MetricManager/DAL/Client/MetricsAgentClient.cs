@@ -22,8 +22,8 @@ namespace MetricManager.DAL.Client
         }
         public AllHddMetricsApiResponse GetAllHddMetrics(GetAllHddMetricsApiRequest request)
         {
-            var fromParameter = request.FromTime;
-            var toParameter = request.ToTime;
+            var fromParameter = request.FromTime.ToString("O");
+            var toParameter = request.ToTime.ToString("O");
 
             var httpRequest = new HttpRequestMessage(HttpMethod.Get,$"{request.ClientBaseAddress}/api/hddmetrics/from/{fromParameter}/to/{toParameter}");
 

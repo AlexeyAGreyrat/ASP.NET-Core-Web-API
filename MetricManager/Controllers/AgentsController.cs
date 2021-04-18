@@ -1,44 +1,71 @@
-﻿using MetricManager.DAL.DTO;
-using AutoMapper;
+﻿using AutoMapper;
+using Dapper;
+using Core.Enum;
 using Core.Interfaces;
-using MetricManager.DAL.Models;
-using MetricManager.DAL.Responses;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using System;
 using System.Collections.Generic;
+using System.Data.SQLite;
 using System.Linq;
-using System.Threading.Tasks;
+using MetricManager.DAL.DTO;
+using MetricManager.DAL.Responses;
+using MetricManager.DAL.Models;
 
 namespace MetricManager.Controllers
-    {
-    [Route("api/agents")]
+{
+    [Route("api/[controller]")]
     [ApiController]
     public class AgentsController : ControllerBase
     {
         private readonly ILogger<AgentsController> _logger;
         private IAgentsRepository<AgentInfo> _agent;
         private IMapper _mapper;
+        private const string ConnectionString = @"Data Source=metrics.db; Version=3;Pooling=True;Max Pool Size=100;";
 
-        public AgentsController(ILogger<AgentsController> logger,IAgentsRepository<AgentInfo> agent, IMapper mapper)
+        public AgentsController(ILogger<AgentsController> logger, IAgentsRepository<AgentInfo> agent, IMapper mapper)
         {
             _mapper = mapper;
             _agent = agent;
             _logger = logger;
-            _logger.LogInformation("NLog зарегистрирован в AgentsController");
+            _logger.LogDebug("NLog встроен в AgentsController");
         }
         /// <summary>
-        /// Получает агентов
+        /// Регестрируем агента
         /// </summary>
-
-        /// <returns>Список агентов, которые были сохранены </returns>
-        /// <response code="201">Если все хорошо</response>
+        /// <param name="agentInfo">регестрируем агента</param>
+        /// <response code="200">Если все хорошо</response>
         /// <response code="400">если передали не правильные параетры</response> 
+        [HttpPost("register")]
+        public IActionResult RegisterAgent([FromBody] AgentInfo agentInfo)
+        {  
+            try
+            {
+                _agent.Create(agentInfo);
+                return Ok();
+            }
+            catch
+            {
+                return BadRequest();
+            }
+        }
+
+        [HttpPut("enable/{agentId}")]
+        public IActionResult EnableAgentById([FromRoute] int agentId)
+        {
+            _logger.LogInformation($"Входные данные: {agentId}");
+            return Ok();
+        }
+
+        [HttpPut("disable/{agentId}")]
+        public IActionResult DisableAgentById([FromRoute] int agentId)
+        {
+            _logger.LogInformation($"Входные данные: {agentId}");
+            return Ok();
+        }
+
         [HttpGet("read")]
         public IActionResult ReadRegisteredAgents()
         {
-            _logger.LogInformation("NLog вызван в ReadRegisteredAgents");
             IList<AgentInfo> agents = _agent.GetAll();
 
             if (agents == null)
@@ -58,33 +85,5 @@ namespace MetricManager.Controllers
 
             return Ok(response);
         }
-        /// <summary>
-        /// регестрируем агентов
-        /// </summary>
-
-        /// <param name="agentInfo">регестрируем агента</param>
-        /// <response code="201">Если все хорошо</response>
-        /// <response code="400">если передали не правильные параетры</response> 
-        [HttpPost("register")]
-        public IActionResult RegisterAgent([FromBody] AgentInfo agentInfo)
-        {
-            _logger.LogInformation($"Входные данные: {agentInfo}");
-            return Ok();
-        }
-
-        [HttpPut("enable/{agentId}")]
-        public IActionResult EnableAgentById([FromRoute] int agentId)
-        {
-            _logger.LogInformation($"Входные данные: {agentId}");
-            return Ok();
-        }
-
-        [HttpPut("disable/{agentId}")]
-        public IActionResult DisableAgentById([FromRoute] int agentId)
-        {
-            _logger.LogInformation($"Входные данные: {agentId}");
-            return Ok();
-        }
     }
 }
-
