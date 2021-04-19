@@ -1,0 +1,18 @@
+﻿using System;
+using System.Collections.Generic;
+
+
+namespace MetricManager.DAL.Responses
+{
+    public class AllNetworkMetricsResponse
+    {
+        public List<NetworkMetricManagerDto> Metrics { get; set; }
+    }
+    public class NetworkMetricManagerDto
+    {
+        public DateTimeOffset Time { get; set; }
+        public int Value { get; set; }
+        public int Id { get; set; }
+        public int IdAgent { get; set; }
+    }
+}
